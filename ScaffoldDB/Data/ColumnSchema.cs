@@ -2,7 +2,7 @@
 {
     public class ColumnSchema
     {
-        public string ColumnName { get; set; }
+        public List<string> ColumnNames { get; set; }
         public string DataType { get; set; }
     }
 }

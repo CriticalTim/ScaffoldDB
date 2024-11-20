@@ -6,8 +6,13 @@
 <h3>Database Schema Viewer</h3>
 
 <div>
-    <label for="connectionString">Connection String:</label>
-    <input id="connectionString" @bind="ConnectionString" style="width: 100%;" />
+    <label for="connectionString">Connection String Parameter:</label>
+    @*<input id="connectionString" @bind="ConnectionString" style="width: 100%;" />*@
+    <input id="Server" @bind="Server" />
+    <input id="Database" @bind="Database"  />
+    <input id="Trusted_Connection" @bind="Trusted_Connection" />
+    <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" />
+    
     <button class="btn btn-primary" @onclick="LoadSchema">Load Schema</button>
 </div>
 
@@ -19,12 +24,12 @@ else if (!IsLoading)
 {
     <div>
         <p>Finished.</p>
-        @*<h4>Database Tables</h4>
+        <h4>Database Tables</h4>
         @foreach (var table in Tables)
         {
             <div>
-                <h5>@table.TableName</h5>
-                <table border="1">
+                <h5>@table</h5>
+                @*<table border="1">
                     <thead>
                         <tr>
                             <th>Column Name</th>
@@ -40,9 +45,9 @@ else if (!IsLoading)
                             </tr>
                         }
                     </tbody>
-                </table>
+                </table>*@
             </div>
-        }*@
+        }
     </div>
 }
 else if (!string.IsNullOrEmpty(ErrorMessage))
@@ -51,10 +56,15 @@ else if (!string.IsNullOrEmpty(ErrorMessage))
 }
 
 @code {
-    private string ConnectionString { get; set; } = "";
-    private List<TableSchema> Tables { get; set; } = new();
+    private string ConnectionString { get; set; }
+    private List<string> Tables { get; set; } = new();
     private string ErrorMessage { get; set; } = "";
     private bool IsLoading { get; set; } = false;
+    private string Server { get; set; } = "(localdb)\\mssqllocaldb";
+    private string Database { get; set; } = "MachineLearningMachine3000";
+    private string Trusted_Connection { get; set; } = "True";
+    private string MultipleActiveResultSets { get; set; } = "True";
+    
 
     private async Task LoadSchema()
     {
@@ -62,12 +72,12 @@ else if (!string.IsNullOrEmpty(ErrorMessage))
         ErrorMessage = "";
         Tables.Clear();
 
-
+        ConnectionString = string.Format($"Server={Server};Database={Database};Trusted_Connection={Trusted_Connection};MultipleActiveResultSets={MultipleActiveResultSets}");
 
         try
         {
-            await Task.Delay(100);
-            rss.GetZeData(ConnectionString);
+
+           Tables = rss.GetZeData(ConnectionString);
         }
         catch (Exception ex)
         {
