@@ -1,0 +1,80 @@
+﻿@page "/"
+
+@*@inject DatabaseSchemaService SchemaService*@
+@inject RuntimeScaffoldService rss
+
+<h3>Database Schema Viewer</h3>
+
+<div>
+    <label for="connectionString">Connection String:</label>
+    <input id="connectionString" @bind="ConnectionString" style="width: 100%;" />
+    <button class="btn btn-primary" @onclick="LoadSchema">Load Schema</button>
+</div>
+
+@if (IsLoading)
+{
+    <p>Loading...</p>
+}
+else if (!IsLoading)
+{
+    <div>
+        <p>Finished.</p>
+        @*<h4>Database Tables</h4>
+        @foreach (var table in Tables)
+        {
+            <div>
+                <h5>@table.TableName</h5>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Column Name</th>
+                            <th>Data Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var column in table.Columns)
+                        {
+                            <tr>
+                                <td>@column.ColumnName</td>
+                                <td>@column.DataType</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }*@
+    </div>
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <p style="color: red;">@ErrorMessage</p>
+}
+
+@code {
+    private string ConnectionString { get; set; } = "";
+    private List<TableSchema> Tables { get; set; } = new();
+    private string ErrorMessage { get; set; } = "";
+    private bool IsLoading { get; set; } = false;
+
+    private async Task LoadSchema()
+    {
+        IsLoading = true;
+        ErrorMessage = "";
+        Tables.Clear();
+
+
+
+        try
+        {
+            await Task.Delay(100); 
+            
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load schema: {ex.Message}";
+        }
+
+
+        IsLoading = false;
+    }
+}
