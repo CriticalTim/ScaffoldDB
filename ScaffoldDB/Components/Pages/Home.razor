@@ -66,8 +66,8 @@ else if (!string.IsNullOrEmpty(ErrorMessage))
 
         try
         {
-            await Task.Delay(100); 
-            
+            await Task.Delay(100);
+            rss.GetZeData(ConnectionString);
         }
         catch (Exception ex)
         {
