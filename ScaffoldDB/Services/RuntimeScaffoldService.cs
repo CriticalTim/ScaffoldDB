@@ -14,12 +14,13 @@ using System.Runtime.Loader;
 using ScaffoldDB.Data;
 using Microsoft.EntityFrameworkCore.Scaffolding.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
+using System.Collections.Generic;
 
 namespace ScaffoldDB.Services
 {
-    public  class RuntimeScaffoldService
+    public class RuntimeScaffoldService
     {
-        public List<string> GetZeData(string connectionString)
+        public List<SchemaTableInfo> GetZeData(string connectionString)
         {
 
             
@@ -78,34 +79,38 @@ namespace ScaffoldDB.Services
                 //alle Tables
                 var Tables = dynamicContext.Model.GetEntityTypes();
 
-                List<string> types = new List<string>();
-                Console.WriteLine($"Context contains {Tables.Count()} types");
+                List<SchemaTableInfo> schemaTableInfos = new List<SchemaTableInfo>();
+                DynamicContextInspector dynamicContextInspector = new DynamicContextInspector();
+                schemaTableInfos = dynamicContextInspector.ExtractSchemaTableInfo(dynamicContext);
+                //List<string> types = new List<string>();
+                //Console.WriteLine($"Context contains {Tables.Count()} types");
 
-                foreach (var Table in Tables)
-                {
-                    var Daten = (IQueryable<object>)dynamicContext.Query(Table.Name);
-                    //System.Diagnostics.Debug.Print($"Entity type: {entityType.Name} contains {items.Count()} items");
+                //foreach (var Table in Tables)
+                //{
+                //    var Daten = (IQueryable<object>)dynamicContext.Query(Table.Name);
+                //    //System.Diagnostics.Debug.Print($"Entity type: {entityType.Name} contains {items.Count()} items");
 
 
-                    types.Add(Table.Name);
+                //    types.Add(Table.Name);
 
-                    Console.WriteLine($"Entity type: {Table.Name} enthält {Daten.Count()} Reihendaten");
-                }
+                //    Console.WriteLine($"Entity type: {Table.Name} enthält {Daten.Count()} Reihendaten");
+                //}
 
-                
+
 
                 if (!enableLazyLoading)
                 {
                     assemblyLoadContext.Unload();
                 }
 
-                return types;
+                return schemaTableInfos;
 
             }
             catch (Exception ex)
             {
                 int i = 0;
-                return null;
+
+                return new List<SchemaTableInfo>();
             }
 
         }

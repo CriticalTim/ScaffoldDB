@@ -5,66 +5,84 @@
 
 <h3>Database Schema Viewer</h3>
 
-<div>
-    <label for="connectionString">Connection String Parameter:</label>
-    @*<input id="connectionString" @bind="ConnectionString" style="width: 100%;" />*@
-    <input id="Server" @bind="Server" />
-    <input id="Database" @bind="Database"  />
-    <input id="Trusted_Connection" @bind="Trusted_Connection" />
-    <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" />
+<div class="form-container">
+    <h4>Connection Settings</h4>
     
-    <button class="btn btn-primary" @onclick="LoadSchema">Load Schema</button>
+        <div class="form-group">
+            <label for="Server">Server:</label>
+            <input id="Server" @bind="Server" type="text" placeholder="Enter server name" />
+        </div>
+        <div class="form-group">
+            <label for="Database">Database:</label>
+            <input id="Database" @bind="Database" type="text" placeholder="Enter database name" />
+        </div>
+        <div class="form-group">
+            <label for="Trusted_Connection">Trusted Connection:</label>
+            <input id="Trusted_Connection" @bind="Trusted_Connection" type="checkbox" />
+        </div>
+        <div class="form-group">
+            <label for="MultipleActiveResultSets">Multiple Active Result Sets:</label>
+            <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" type="checkbox" />
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" @onclick="LoadSchema">Load Schema</button>
+        </div>
+   
 </div>
 
 @if (IsLoading)
 {
     <p>Loading...</p>
 }
-else if (!IsLoading)
+else if (!IsLoading && schemaTableInfosUI.Any())
 {
-    <div>
-        <p>Finished.</p>
+    <div class="form-container">
+        
         <h4>Database Tables</h4>
-        @foreach (var table in Tables)
+        @foreach (var info in schemaTableInfosUI)
         {
             <div>
-                <h5>@table</h5>
-                @*<table border="1">
+                
+                <table border="1">
                     <thead>
                         <tr>
-                            <th>Column Name</th>
-                            <th>Data Type</th>
+                            <th>Schema</th>
+                            <th>Table</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var column in table.Columns)
+                        @foreach (var tableName in info.TableNames)
                         {
                             <tr>
-                                <td>@column.ColumnName</td>
-                                <td>@column.DataType</td>
+                                <td>@info.SchemaName</td>
+                                <td>@tableName</td>
                             </tr>
                         }
                     </tbody>
-                </table>*@
+                </table>
             </div>
         }
     </div>
 }
 else if (!string.IsNullOrEmpty(ErrorMessage))
 {
-    <p style="color: red;">@ErrorMessage</p>
+    <div class="form-container">
+        <p style="color: red;">@ErrorMessage</p>
+    </div>
+    
 }
 
 @code {
     private string ConnectionString { get; set; }
     private List<string> Tables { get; set; } = new();
+    List<SchemaTableInfo> schemaTableInfosUI = new List<SchemaTableInfo>();
     private string ErrorMessage { get; set; } = "";
     private bool IsLoading { get; set; } = false;
     private string Server { get; set; } = "(localdb)\\mssqllocaldb";
     private string Database { get; set; } = "MachineLearningMachine3000";
     private string Trusted_Connection { get; set; } = "True";
     private string MultipleActiveResultSets { get; set; } = "True";
-    
+
 
     private async Task LoadSchema()
     {
@@ -76,8 +94,11 @@ else if (!string.IsNullOrEmpty(ErrorMessage))
 
         try
         {
-
-           Tables = rss.GetZeData(ConnectionString);
+            schemaTableInfosUI = rss.GetZeData(ConnectionString);
+            if (!schemaTableInfosUI.Any())
+            {
+                ErrorMessage = "Scaffolding Failed! Connectionstring incorrect.";
+            }
         }
         catch (Exception ex)
         {
@@ -88,3 +109,110 @@ else if (!string.IsNullOrEmpty(ErrorMessage))
         IsLoading = false;
     }
 }
+
+<style>
+    /* Form Container Styling */
+    .form-container {
+        padding: 20px;
+        max-width: 500px;
+        margin: 0 auto;
+        background: #1e2a39;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        margin-bottom: 2vh;
+        color: #fff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+        .form-container h4 {
+            color: #00d8ff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+    /* Form Group Styling */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #00d8ff;
+            border-radius: 5px;
+            background: #1e2a39;
+            color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+            .form-group input[type="text"]:focus {
+                outline: none;
+                border-color: #66ffcc;
+                box-shadow: 0 0 10px #66ffcc;
+            }
+
+        .form-group input[type="checkbox"] {
+            transform: scale(1.2);
+            margin-right: 10px;
+        }
+
+    /* Form Actions Styling */
+    .form-actions {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .btn.btn-primary {
+        background: linear-gradient(135deg, #00d8ff, #0066ff);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 15px rgba(0, 255, 255, 0.4);
+    }
+
+        .btn.btn-primary:hover {
+            background: linear-gradient(135deg, #66ffcc, #33ccff);
+            box-shadow: 0 4px 20px rgba(51, 204, 255, 0.6);
+            transform: scale(1.05);
+        }
+        .btn.btn-primary:active{
+            transform: scale(0.8);
+        }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background: #1e2a39;
+        color: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    th, td {
+        padding: 12px 15px;
+        border: 1px solid #2e3c4e;
+        text-align: left;
+    }
+
+    th {
+        background: #00d8ff;
+        color: #000;
+    }
+
+    tbody tr:hover {
+        background: rgba(0, 216, 255, 0.1);
+    }
+</style>
