@@ -15,12 +15,16 @@ using ScaffoldDB.Data;
 using Microsoft.EntityFrameworkCore.Scaffolding.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.Migrations.Design;
+using System;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
 
 namespace ScaffoldDB.Services
 {
     public class RuntimeScaffoldService
     {
-        public List<SchemaTableInfo> GetZeData(string connectionString)
+        public List<SchemaTableInfo> GetZeData(string connectionString, string dbname, bool migrate = false)
         {
 
             
@@ -76,25 +80,75 @@ namespace ScaffoldDB.Services
                 // der dynamic Context
                 DbContext dynamicContext = (DbContext)constr.Invoke(null);
 
-                //alle Tables
-                var Tables = dynamicContext.Model.GetEntityTypes();
+                ////alle Tables
+                //var Tables = dynamicContext.Model.GetEntityTypes();
 
                 List<SchemaTableInfo> schemaTableInfos = new List<SchemaTableInfo>();
                 DynamicContextInspector dynamicContextInspector = new DynamicContextInspector();
                 schemaTableInfos = dynamicContextInspector.ExtractSchemaTableInfo(dynamicContext);
-                //List<string> types = new List<string>();
-                //Console.WriteLine($"Context contains {Tables.Count()} types");
 
-                //foreach (var Table in Tables)
-                //{
-                //    var Daten = (IQueryable<object>)dynamicContext.Query(Table.Name);
-                //    //System.Diagnostics.Debug.Print($"Entity type: {entityType.Name} contains {items.Count()} items");
+                //-------------------------------------------------------------------------------------
+                var services = new ServiceCollection()
+                .AddEntityFrameworkDesignTimeServices()
+                .AddDbContextDesignTimeServices(dynamicContext);
 
+                var designTimeServices = new SqlServerDesignTimeServices();
+                designTimeServices.ConfigureDesignTimeServices(services);
 
-                //    types.Add(Table.Name);
+                var serviceProvider = services.BuildServiceProvider();
+                var scaffolderMig = serviceProvider.GetRequiredService<IMigrationsScaffolder>();
+                var migration = scaffolderMig.ScaffoldMigration("MyMigration", "ScaffoldDB.Data");
 
-                //    Console.WriteLine($"Entity type: {Table.Name} enthält {Daten.Count()} Reihendaten");
-                //}
+                //Console.WriteLine(migration.MigrationCode);
+                //-------------------------------------------------------------------------------------
+
+                string appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+                //string outputDirectory = Path.Combine(appDataLocal, "Migrations");
+
+                
+
+                string migrationsFOlderpath = @"..\..\..\Migrations\" + dbname;
+
+                string outputPreDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, migrationsFOlderpath);
+
+                string outputDirectory = Path.GetFullPath(outputPreDirectory);
+
+                if (!Directory.Exists(outputDirectory))
+                    {
+                        Directory.CreateDirectory(outputDirectory);
+                    }
+
+                    File.WriteAllText(
+                    Path.Combine(outputDirectory, migration.MigrationId + migration.FileExtension),
+                    migration.MigrationCode
+                );
+                File.WriteAllText(
+                    Path.Combine(outputDirectory, migration.MigrationId + ".Designer" + migration.FileExtension),
+                    migration.MetadataCode
+                );
+                File.WriteAllText(
+                    Path.Combine(outputDirectory, migration.SnapshotName + migration.FileExtension),
+                    migration.SnapshotCode
+                );
+                //-------------------------------------------------------------------------------------
+
+                if (migrate)
+                {
+                    // Configure the DbContextOptions with the new connection string
+                    var optionsBuilder = new DbContextOptionsBuilder();
+                    optionsBuilder.UseSqlServer(connectionString); // Adjust for your DB provider (e.g., MySQL, PostgreSQL)
+
+                    // Create a DbContext instance using reflection
+                    DbContext dbContext = new DbContext(optionsBuilder.Options);
+                    if (dbContext == null)
+                        throw new Exception("Failed to create an instance of the dynamic DbContext.");
+
+                    // Apply the migrations programmatically
+                    dbContext.Database.Migrate();
+
+                }
+
 
 
 
@@ -115,7 +169,7 @@ namespace ScaffoldDB.Services
 
         }
 
-
+       
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "We need it")]
         public  IReverseEngineerScaffolder CreateMssqlScaffolder() =>
             new ServiceCollection()
@@ -169,6 +223,7 @@ namespace ScaffoldDB.Services
         }
     }
 
+    
     
     
 }

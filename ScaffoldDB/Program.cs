@@ -30,6 +30,33 @@ namespace ScaffoldDB
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
 
+
+            //string appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+            //string tempDirectory = Path.Combine(appDataLocal, "Migrations");
+            //if (!Directory.Exists(tempDirectory))
+            //{
+            //    Directory.CreateDirectory(tempDirectory);
+            //}
+
+            //// Register cleanup logic on application shutdown
+            //var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+            //lifetime.ApplicationStopping.Register(() =>
+            //{
+            //    if (Directory.Exists(tempDirectory))
+            //    {
+            //        foreach (var file in Directory.GetFiles(tempDirectory))
+            //        {
+            //            File.Delete(file);
+            //        }
+
+            //        foreach (var subDir in Directory.GetDirectories(tempDirectory))
+            //        {
+            //            Directory.Delete(subDir, true);
+            //        }
+            //    }
+            //});
+
             app.Run();
         }
     }
