@@ -2,57 +2,57 @@
 @*@inject DatabaseSchemaService SchemaService*@
 @inject RuntimeScaffoldService rss
 
-<h3>Database Schema Viewer</h3>
+<h3 style="position:center;">Database Schema Viewer</h3>
+<div class="row">
+    <div class="form-container col-6">
+        <h4>Connection Settings</h4>
 
-<div class="form-container">
-    <h4>Connection Settings</h4>
+        <div class="form-group">
+            <label for="Server">Server:</label>
+            <input id="Server" @bind="Server" type="text" placeholder="Enter server name" />
+        </div>
+        <div class="form-group">
+            <label for="Database">Database:</label>
+            <input id="Database" @bind="Database" type="text" placeholder="Enter database name" />
+        </div>
+        <div class="form-group">
+            <label for="SQLLogin">SQL-Login</label>
+            <input id="SQLLogin" @bind="SQLLogin" type="checkbox" />
+        </div>
+        @if (SQLLogin)
+        {
+            <div class="form-group">
+                <label for="login">Login:</label>
+                <input id="login" @bind="login" type="text" placeholder="Enter Login name" />
+            </div>
+            <div class="form-group">
+                <label for="Password">Password:</label>
+                <input id="Password" @bind="password" type="text" placeholder="Enter Password" />
+            </div>
+        }
+        <div class="form-group">
+            <label for="Trusted_Connection">Trusted Connection:</label>
+            <input id="Trusted_Connection" @bind="Trusted_Connection" type="checkbox" />
+        </div>
+        <div class="form-group">
+            <label for="MultipleActiveResultSets">Multiple Active Result Sets:</label>
+            <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" type="checkbox" />
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" @onclick="LoadSchema">Load Schema</button>
+        </div>
 
-    <div class="form-group">
-        <label for="Server">Server:</label>
-        <input id="Server" @bind="Server" type="text" placeholder="Enter server name" />
     </div>
-    <div class="form-group">
-        <label for="Database">Database:</label>
-        <input id="Database" @bind="Database" type="text" placeholder="Enter database name" />
-    </div>
-    <div class="form-group">
-        <label for="SQLLogin">SQL-Login</label>
-        <input id="SQLLogin" @bind="SQLLogin" type="checkbox" />
-    </div>
-    @if (SQLLogin)
+
+    @if (IsLoading)
     {
-        <div class="form-group">
-            <label for="login">Login:</label>
-            <input id="login" @bind="login" type="text" placeholder="Enter Login name" />
-        </div>
-        <div class="form-group">
-            <label for="Password">Password:</label>
-            <input id="Password" @bind="password" type="text" placeholder="Enter Password" />
-        </div>
+        <p>Loading...</p>
     }
-    <div class="form-group">
-        <label for="Trusted_Connection">Trusted Connection:</label>
-        <input id="Trusted_Connection" @bind="Trusted_Connection" type="checkbox" />
-    </div>
-    <div class="form-group">
-        <label for="MultipleActiveResultSets">Multiple Active Result Sets:</label>
-        <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" type="checkbox" />
-    </div>
-    <div class="form-actions">
-        <button class="btn btn-primary" @onclick="LoadSchema">Load Schema</button>
-    </div>
-
-</div>
-
-@if (IsLoading)
-{
-    <p>Loading...</p>
-}
-else if (!IsLoading && schemaTableInfosUI.Any())
-{
-    <div class="form-container">
-
-        <h4>Database Tables</h4>
+    else if (!IsLoading && schemaTableInfosUI.Any())
+    {
+<div class="form-container col-6">
+    <div class="row">
+        <h4>Tabellenübersicht</h4>
         @foreach (var info in schemaTableInfosUI)
         {
             <div>
@@ -77,74 +77,50 @@ else if (!IsLoading && schemaTableInfosUI.Any())
             </div>
         }
     </div>
-}
-else if (!string.IsNullOrEmpty(ErrorMessage) && !ErrorMessage.Contains("Success"))
-{
-    <div class="form-container">
-        <p style="color: red;">@ErrorMessage</p>
-    </div>
-
-}
-else if (!string.IsNullOrEmpty(ErrorMessage) && ErrorMessage.Contains("Success"))
-{
-    <div class="form-container">
-        <p style="color: green;">@ErrorMessage</p>
-    </div>
-
-}
-
-@if (tickMigrating)
-{
-    <div class="form-container">
-        <h4>Connection Settings to Migration Server</h4>
-
-        <div class="form-group">
-            <label for="Server">Server:</label>
-            <input id="Server" @bind="Server2" type="text" placeholder="Enter server name" />
-        </div>
-        <div class="form-group">
-            <label for="Database">Database:</label>
-            <input id="Database" @bind="Database2" type="text" placeholder="Enter database name" />
-        </div>
-        <div class="form-group">
-            <label for="SQLLogin">SQL-Login</label>
-            <input id="SQLLogin" @bind="SQLLogin2" type="checkbox" />
-        </div>
-        @if (SQLLogin2)
-        {
-            <div class="form-group">
-                <label for="login">Login:</label>
-                <input id="login" @bind="login2" type="text" placeholder="Enter Login name" />
-            </div>
-            <div class="form-group">
-                <label for="Password">Password:</label>
-                <input id="Password" @bind="password2" type="text" placeholder="Enter Password" />
-            </div>
-        }
-        <div class="form-group">
-            <label for="Trusted_Connection">Trusted Connection:</label>
-            <input id="Trusted_Connection" @bind="Trusted_Connection2" type="checkbox" />
-        </div>
-        <div class="form-group">
-            <label for="MultipleActiveResultSets">Multiple Active Result Sets:</label>
-            <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets2" type="checkbox" />
-        </div>
-        <div class="form-actions">
-            <div class="row">
-                @if (!MigrationDeleted)
+    <div class="row">
+        <select @bind="SelectedItem" class="form-select">
+            <option value="">-- Wählen Sie eine Tabelle zum Bearbeiten aus --</option>
+            @foreach (var tableInfo in schemaTableInfosUI)
+            {
+                @foreach (var tableName in tableInfo.TableNames)
                 {
-                    <div class="col-md-6">
-                        <button class="btn btn-primary" @onclick="DoMigration">Migrate Database Structure</button>
-                    </div>
+    
+    
+                    <option value="@tableName">@tableName</option>
+    
                 }
-                <div class="col-md-6">
-                    <button class="btn btn-primary" @onclick="DeleteMigrationFiles">Delete Migration Files</button>
-                </div>
-            </div>
-
-        </div>
+    
+            }
+        </select>
     </div>
-}
+    <div class="row">
+        <!-- Button to Trigger Function -->
+        <button class="btn btn-primary mt-3" @onclick="() => Bearbeiten(SelectedItem)" disabled="@(string.IsNullOrEmpty(SelectedItem))">
+            Bearbeiten
+        </button>
+    </div>
+
+</div>
+    }
+</div>
+<div class="row">
+    @if (!string.IsNullOrEmpty(ErrorMessage) && !ErrorMessage.Contains("Success"))
+    {
+        <div class="form-container">
+            <p style="color: red;">@ErrorMessage</p>
+        </div>
+
+    }
+    else if (!string.IsNullOrEmpty(ErrorMessage) && ErrorMessage.Contains("Success"))
+    {
+        <div class="form-container">
+            <p style="color: green;">@ErrorMessage</p>
+        </div>
+
+    }
+</div>
+
+
 
 @code {
     private string ConnectionString { get; set; }
@@ -155,23 +131,16 @@ else if (!string.IsNullOrEmpty(ErrorMessage) && ErrorMessage.Contains("Success")
     private bool IsLoading { get; set; } = false;
     private bool MigrationDeleted { get; set; } = false;
 
-    private string Server { get; set; } = "(localdb)\\mssqllocaldb";
-    private string Database { get; set; } = "MachineLearningMachine3000";
-    private string login { get; set; } = "";
-    private string password { get; set; } = "";
-    private bool SQLLogin { get; set; } = false;
+    private string SelectedItem { get; set; } = "";
+
+    private string Server { get; set; } = "localhost";
+    private string Database { get; set; } = "StackOverflow2013";
+    private string login { get; set; } = "TestSQLLogin";
+    private string password { get; set; } = "TestKennwort123";
+    private bool SQLLogin { get; set; } = true;
     private string Trusted_Connection { get; set; } = "True";
     private string MultipleActiveResultSets { get; set; } = "True";
 
-    private string Server2 { get; set; } = "(localdb)\\mssqllocaldb";
-    private string Database2 { get; set; } = "MachineLearningMachine3000";
-    private string login2 { get; set; } = "";
-    private string password2 { get; set; } = "";
-    private bool SQLLogin2 { get; set; } = false;
-    private string Trusted_Connection2 { get; set; } = "True";
-    private string MultipleActiveResultSets2 { get; set; } = "True";
-
-    private bool tickMigrating { get; set; } = false;
 
 
     private async Task LoadSchema()
@@ -180,10 +149,10 @@ else if (!string.IsNullOrEmpty(ErrorMessage) && ErrorMessage.Contains("Success")
         ErrorMessage = "";
         Tables.Clear();
 
-        ConnectionString = string.Format($"Server={Server};Database={Database};Trusted_Connection={Trusted_Connection};MultipleActiveResultSets={MultipleActiveResultSets}");
+        ConnectionString = string.Format($"Server={Server};Database={Database};TrustServerCertificate=true;Trusted_Connection={Trusted_Connection};MultipleActiveResultSets={MultipleActiveResultSets}");
         if (SQLLogin)
         {
-            ConnectionStringLogin = string.Format($"Server={Server};Database={Database};User Id={login};Password={password};Trusted_Connection={Trusted_Connection};MultipleActiveResultSets={MultipleActiveResultSets}");
+            ConnectionString = string.Format($"Server={Server};Database={Database};User Id={login};Password={password};TrustServerCertificate=true;Trusted_Connection={Trusted_Connection};MultipleActiveResultSets={MultipleActiveResultSets}");
         }
 
 
@@ -194,41 +163,17 @@ else if (!string.IsNullOrEmpty(ErrorMessage) && ErrorMessage.Contains("Success")
             {
                 ErrorMessage = "Scaffolding Failed! Connectionstring incorrect.";
             }
-            tickMigrating = true;
+
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to load schema: {ex.Message}";
         }
-        
+
         MigrationDeleted = false;
         IsLoading = false;
     }
 
-    private async Task DoMigration()
-    {
-        ConnectionString = string.Format($"Server={Server2};Database={Database2};Trusted_Connection={Trusted_Connection2};MultipleActiveResultSets={MultipleActiveResultSets2}");
-        if (SQLLogin2)
-        {
-            ConnectionStringLogin = string.Format($"Server={Server2};Database={Database2};User Id={login2};Password={password2};Trusted_Connection={Trusted_Connection2};MultipleActiveResultSets={MultipleActiveResultSets2}");
-        }
-
-        try
-        {
-            schemaTableInfosUI = rss.GetZeData(ConnectionString, Database, true);
-            if (!schemaTableInfosUI.Any())
-            {
-                ErrorMessage = "Scaffolding Failed! Connectionstring incorrect.";
-            }
-            ErrorMessage = "Migration Success!";
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Failed to load schema: {ex.Message}";
-        }
-
-
-    }
 
     private async Task DeleteMigrationFiles()
     {
@@ -250,6 +195,12 @@ else if (!string.IsNullOrEmpty(ErrorMessage) && ErrorMessage.Contains("Success")
 
         MigrationDeleted = true;
     }
+
+    private void Bearbeiten(string tableName) 
+    {
+           
+    }
+
 }
 <style>
     /* Form Container Styling */

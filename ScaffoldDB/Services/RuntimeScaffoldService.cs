@@ -102,17 +102,18 @@ namespace ScaffoldDB.Services
                 //Console.WriteLine(migration.MigrationCode);
                 //-------------------------------------------------------------------------------------
 
+                //Pfad zu AppData 
                 string appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-                //string outputDirectory = Path.Combine(appDataLocal, "Migrations");
+                string outputDirectory = Path.Combine(appDataLocal, "Migrations");
 
-                
 
-                string migrationsFOlderpath = @"..\..\..\Migrations\" + dbname;
+                //Pfad zum Prejekt Migrations Folder
+                //string migrationsFOlderpath = @"..\..\..\Migrations\" + dbname;
 
-                string outputPreDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, migrationsFOlderpath);
+                //string outputPreDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, migrationsFOlderpath);
 
-                string outputDirectory = Path.GetFullPath(outputPreDirectory);
+                //string outputDirectory = Path.GetFullPath(outputPreDirectory);
 
                 if (!Directory.Exists(outputDirectory))
                     {
@@ -169,7 +170,153 @@ namespace ScaffoldDB.Services
 
         }
 
-       
+        public List<SchemaTableInfo> GetZeData(string connectionString)
+        {
+
+
+
+            try
+            {
+                var scaffolder = CreateMssqlScaffolder();
+
+                var dbOpts = new DatabaseModelFactoryOptions();
+                var modelOpts = new ModelReverseEngineerOptions();
+                var codeGenOpts = new ModelCodeGenerationOptions()
+                {
+                    RootNamespace = "TypedDataContext",
+                    ContextName = "DataContext",
+                    ContextNamespace = "TypedDataContext.Context",
+                    ModelNamespace = "TypedDataContext.Models",
+                    SuppressConnectionStringWarning = true
+                };
+
+                var scaffoldedModelSources = scaffolder.ScaffoldModel(connectionString, dbOpts, modelOpts, codeGenOpts);
+                var sourceFiles = new List<string> { scaffoldedModelSources.ContextFile.Code };
+                sourceFiles.AddRange(scaffoldedModelSources.AdditionalFiles.Select(f => f.Code));
+
+
+
+                using var peStream = new MemoryStream();
+
+                var enableLazyLoading = false;
+                var result = GenerateCode(sourceFiles, enableLazyLoading).Emit(peStream);
+
+                if (!result.Success)
+                {
+                    var failures = result.Diagnostics
+                        .Where(diagnostic => diagnostic.IsWarningAsError ||
+                                             diagnostic.Severity == DiagnosticSeverity.Error);
+
+                    var error = failures.FirstOrDefault();
+                    throw new Exception($"{error?.Id}: {error?.GetMessage()}");
+                    return null;
+                }
+
+                var assemblyLoadContext = new AssemblyLoadContext("DbContext", isCollectible: !enableLazyLoading);
+
+                peStream.Seek(0, SeekOrigin.Begin);
+                var assembly = assemblyLoadContext.LoadFromStream(peStream);
+
+                var type = assembly.GetType("TypedDataContext.Context.DataContext");
+                _ = type ?? throw new Exception("DataContext type not found");
+
+                var constr = type.GetConstructor(Type.EmptyTypes);
+                _ = constr ?? throw new Exception("DataContext ctor not found");
+
+                // der dynamic Context
+                DbContext dynamicContext = (DbContext)constr.Invoke(null);
+
+                ////alle Tables
+                //var Tables = dynamicContext.Model.GetEntityTypes();
+
+                List<SchemaTableInfo> schemaTableInfos = new List<SchemaTableInfo>();
+                DynamicContextInspector dynamicContextInspector = new DynamicContextInspector();
+                schemaTableInfos = dynamicContextInspector.ExtractSchemaTableInfo(dynamicContext);
+
+                //-------------------------------------------------------------------------------------
+                var services = new ServiceCollection()
+                .AddEntityFrameworkDesignTimeServices()
+                .AddDbContextDesignTimeServices(dynamicContext);
+
+                var designTimeServices = new SqlServerDesignTimeServices();
+                designTimeServices.ConfigureDesignTimeServices(services);
+
+                var serviceProvider = services.BuildServiceProvider();
+                var scaffolderMig = serviceProvider.GetRequiredService<IMigrationsScaffolder>();
+                var migration = scaffolderMig.ScaffoldMigration("MyMigration", "ScaffoldDB.Data");
+
+                //Console.WriteLine(migration.MigrationCode);
+                //-------------------------------------------------------------------------------------
+
+                //Pfad zu AppData 
+                string appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+                string outputDirectory = Path.Combine(appDataLocal, "Migrations");
+
+
+                //Pfad zum Prejekt Migrations Folder
+                //string migrationsFOlderpath = @"..\..\..\Migrations\" + dbname;
+
+                //string outputPreDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, migrationsFOlderpath);
+
+                //string outputDirectory = Path.GetFullPath(outputPreDirectory);
+
+                if (!Directory.Exists(outputDirectory))
+                {
+                    Directory.CreateDirectory(outputDirectory);
+                }
+
+                File.WriteAllText(
+                Path.Combine(outputDirectory, migration.MigrationId + migration.FileExtension),
+                migration.MigrationCode
+            );
+                File.WriteAllText(
+                    Path.Combine(outputDirectory, migration.MigrationId + ".Designer" + migration.FileExtension),
+                    migration.MetadataCode
+                );
+                File.WriteAllText(
+                    Path.Combine(outputDirectory, migration.SnapshotName + migration.FileExtension),
+                    migration.SnapshotCode
+                );
+                //-------------------------------------------------------------------------------------
+
+                if (migrate)
+                {
+                    // Configure the DbContextOptions with the new connection string
+                    var optionsBuilder = new DbContextOptionsBuilder();
+                    optionsBuilder.UseSqlServer(connectionString); // Adjust for your DB provider (e.g., MySQL, PostgreSQL)
+
+                    // Create a DbContext instance using reflection
+                    DbContext dbContext = new DbContext(optionsBuilder.Options);
+                    if (dbContext == null)
+                        throw new Exception("Failed to create an instance of the dynamic DbContext.");
+
+                    // Apply the migrations programmatically
+                    dbContext.Database.Migrate();
+
+                }
+
+
+
+
+                if (!enableLazyLoading)
+                {
+                    assemblyLoadContext.Unload();
+                }
+
+                return schemaTableInfos;
+
+            }
+            catch (Exception ex)
+            {
+                int i = 0;
+
+                return new List<SchemaTableInfo>();
+            }
+
+        }
+
+
         [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "We need it")]
         public  IReverseEngineerScaffolder CreateMssqlScaffolder() =>
             new ServiceCollection()
