@@ -26,9 +26,6 @@ namespace ScaffoldDB.Services
     {
         public List<SchemaTableInfo> GetZeData(string connectionString, string dbname, bool migrate = false)
         {
-
-            
-
             try
             {
                 var scaffolder = CreateMssqlScaffolder();
@@ -83,55 +80,57 @@ namespace ScaffoldDB.Services
                 ////alle Tables
                 //var Tables = dynamicContext.Model.GetEntityTypes();
 
+                
+
                 List<SchemaTableInfo> schemaTableInfos = new List<SchemaTableInfo>();
                 DynamicContextInspector dynamicContextInspector = new DynamicContextInspector();
                 schemaTableInfos = dynamicContextInspector.ExtractSchemaTableInfo(dynamicContext);
 
-                //-------------------------------------------------------------------------------------
-                var services = new ServiceCollection()
-                .AddEntityFrameworkDesignTimeServices()
-                .AddDbContextDesignTimeServices(dynamicContext);
+                ////-------------------------------------------------------------------------------------
+                //var services = new ServiceCollection()
+                //.AddEntityFrameworkDesignTimeServices()
+                //.AddDbContextDesignTimeServices(dynamicContext);
 
-                var designTimeServices = new SqlServerDesignTimeServices();
-                designTimeServices.ConfigureDesignTimeServices(services);
+                //var designTimeServices = new SqlServerDesignTimeServices();
+                //designTimeServices.ConfigureDesignTimeServices(services);
 
-                var serviceProvider = services.BuildServiceProvider();
-                var scaffolderMig = serviceProvider.GetRequiredService<IMigrationsScaffolder>();
-                var migration = scaffolderMig.ScaffoldMigration("MyMigration", "ScaffoldDB.Data");
+                //var serviceProvider = services.BuildServiceProvider();
+                //var scaffolderMig = serviceProvider.GetRequiredService<IMigrationsScaffolder>();
+                //var migration = scaffolderMig.ScaffoldMigration("MyMigration", "ScaffoldDB.Data");
 
-                //Console.WriteLine(migration.MigrationCode);
-                //-------------------------------------------------------------------------------------
+                ////Console.WriteLine(migration.MigrationCode);
+                ////-------------------------------------------------------------------------------------
 
-                //Pfad zu AppData 
-                string appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                ////Pfad zu AppData 
+                //string appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-                string outputDirectory = Path.Combine(appDataLocal, "Migrations");
+                //string outputDirectory = Path.Combine(appDataLocal, "Migrations");
 
 
-                //Pfad zum Prejekt Migrations Folder
-                //string migrationsFOlderpath = @"..\..\..\Migrations\" + dbname;
+                ////Pfad zum Prejekt Migrations Folder
+                ////string migrationsFOlderpath = @"..\..\..\Migrations\" + dbname;
 
-                //string outputPreDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, migrationsFOlderpath);
+                ////string outputPreDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, migrationsFOlderpath);
 
-                //string outputDirectory = Path.GetFullPath(outputPreDirectory);
+                ////string outputDirectory = Path.GetFullPath(outputPreDirectory);
 
-                if (!Directory.Exists(outputDirectory))
-                    {
-                        Directory.CreateDirectory(outputDirectory);
-                    }
+                //if (!Directory.Exists(outputDirectory))
+                //    {
+                //        Directory.CreateDirectory(outputDirectory);
+                //    }
 
-                    File.WriteAllText(
-                    Path.Combine(outputDirectory, migration.MigrationId + migration.FileExtension),
-                    migration.MigrationCode
-                );
-                File.WriteAllText(
-                    Path.Combine(outputDirectory, migration.MigrationId + ".Designer" + migration.FileExtension),
-                    migration.MetadataCode
-                );
-                File.WriteAllText(
-                    Path.Combine(outputDirectory, migration.SnapshotName + migration.FileExtension),
-                    migration.SnapshotCode
-                );
+                //    File.WriteAllText(
+                //    Path.Combine(outputDirectory, migration.MigrationId + migration.FileExtension),
+                //    migration.MigrationCode
+                //);
+                //File.WriteAllText(
+                //    Path.Combine(outputDirectory, migration.MigrationId + ".Designer" + migration.FileExtension),
+                //    migration.MetadataCode
+                //);
+                //File.WriteAllText(
+                //    Path.Combine(outputDirectory, migration.SnapshotName + migration.FileExtension),
+                //    migration.SnapshotCode
+                //);
                 //-------------------------------------------------------------------------------------
 
                 if (migrate)
@@ -170,11 +169,8 @@ namespace ScaffoldDB.Services
 
         }
 
-        public List<SchemaTableInfo> GetZeData(string connectionString)
+        public TableData GetZeTable(string connectionString, string tableName)
         {
-
-
-
             try
             {
                 var scaffolder = CreateMssqlScaffolder();
@@ -226,75 +222,10 @@ namespace ScaffoldDB.Services
                 // der dynamic Context
                 DbContext dynamicContext = (DbContext)constr.Invoke(null);
 
-                ////alle Tables
-                //var Tables = dynamicContext.Model.GetEntityTypes();
-
-                List<SchemaTableInfo> schemaTableInfos = new List<SchemaTableInfo>();
+                TableData tableData = new TableData();
                 DynamicContextInspector dynamicContextInspector = new DynamicContextInspector();
-                schemaTableInfos = dynamicContextInspector.ExtractSchemaTableInfo(dynamicContext);
 
-                //-------------------------------------------------------------------------------------
-                var services = new ServiceCollection()
-                .AddEntityFrameworkDesignTimeServices()
-                .AddDbContextDesignTimeServices(dynamicContext);
-
-                var designTimeServices = new SqlServerDesignTimeServices();
-                designTimeServices.ConfigureDesignTimeServices(services);
-
-                var serviceProvider = services.BuildServiceProvider();
-                var scaffolderMig = serviceProvider.GetRequiredService<IMigrationsScaffolder>();
-                var migration = scaffolderMig.ScaffoldMigration("MyMigration", "ScaffoldDB.Data");
-
-                //Console.WriteLine(migration.MigrationCode);
-                //-------------------------------------------------------------------------------------
-
-                //Pfad zu AppData 
-                string appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
-                string outputDirectory = Path.Combine(appDataLocal, "Migrations");
-
-
-                //Pfad zum Prejekt Migrations Folder
-                //string migrationsFOlderpath = @"..\..\..\Migrations\" + dbname;
-
-                //string outputPreDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, migrationsFOlderpath);
-
-                //string outputDirectory = Path.GetFullPath(outputPreDirectory);
-
-                if (!Directory.Exists(outputDirectory))
-                {
-                    Directory.CreateDirectory(outputDirectory);
-                }
-
-                File.WriteAllText(
-                Path.Combine(outputDirectory, migration.MigrationId + migration.FileExtension),
-                migration.MigrationCode
-            );
-                File.WriteAllText(
-                    Path.Combine(outputDirectory, migration.MigrationId + ".Designer" + migration.FileExtension),
-                    migration.MetadataCode
-                );
-                File.WriteAllText(
-                    Path.Combine(outputDirectory, migration.SnapshotName + migration.FileExtension),
-                    migration.SnapshotCode
-                );
-                //-------------------------------------------------------------------------------------
-
-                if (migrate)
-                {
-                    // Configure the DbContextOptions with the new connection string
-                    var optionsBuilder = new DbContextOptionsBuilder();
-                    optionsBuilder.UseSqlServer(connectionString); // Adjust for your DB provider (e.g., MySQL, PostgreSQL)
-
-                    // Create a DbContext instance using reflection
-                    DbContext dbContext = new DbContext(optionsBuilder.Options);
-                    if (dbContext == null)
-                        throw new Exception("Failed to create an instance of the dynamic DbContext.");
-
-                    // Apply the migrations programmatically
-                    dbContext.Database.Migrate();
-
-                }
+                tableData = dynamicContextInspector.ExtractTableData(dynamicContext, tableName);
 
 
 
@@ -304,14 +235,14 @@ namespace ScaffoldDB.Services
                     assemblyLoadContext.Unload();
                 }
 
-                return schemaTableInfos;
+                return tableData;
 
             }
             catch (Exception ex)
             {
                 int i = 0;
 
-                return new List<SchemaTableInfo>();
+                return new TableData();
             }
 
         }

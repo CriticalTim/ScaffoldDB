@@ -2,7 +2,14 @@
 @*@inject DatabaseSchemaService SchemaService*@
 @inject RuntimeScaffoldService rss
 
-<h3 style="position:center;">Database Schema Viewer</h3>
+<h3 style="position:center;">Database Manipulator</h3>
+
+
+@if (!getTableDataSuccess)
+{
+
+
+
 <div class="row">
     <div class="form-container col-6">
         <h4>Connection Settings</h4>
@@ -39,7 +46,7 @@
             <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" type="checkbox" />
         </div>
         <div class="form-actions">
-            <button class="btn btn-primary" @onclick="LoadSchema">Load Schema</button>
+            <button class="btn btn-primary" @onclick="LoadSchema">Load Database Information</button>
         </div>
 
     </div>
@@ -50,57 +57,57 @@
     }
     else if (!IsLoading && schemaTableInfosUI.Any())
     {
-<div class="form-container col-6">
-    <div class="row">
-        <h4>Tabellenübersicht</h4>
-        @foreach (var info in schemaTableInfosUI)
-        {
-            <div>
-
-                <table border="1">
-                    <thead>
-                        <tr>
-                            <th>Schema</th>
-                            <th>Table</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tableName in info.TableNames)
-                        {
-                            <tr>
-                                <td>@info.SchemaName</td>
-                                <td>@tableName</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </div>
-    <div class="row">
-        <select @bind="SelectedItem" class="form-select">
-            <option value="">-- Wählen Sie eine Tabelle zum Bearbeiten aus --</option>
-            @foreach (var tableInfo in schemaTableInfosUI)
-            {
-                @foreach (var tableName in tableInfo.TableNames)
+        <div class="form-container col-6">
+            <div class="row">
+                <h4>Tabellenübersicht</h4>
+                @foreach (var info in schemaTableInfosUI)
                 {
-    
-    
-                    <option value="@tableName">@tableName</option>
-    
-                }
-    
-            }
-        </select>
-    </div>
-    <div class="row">
-        <!-- Button to Trigger Function -->
-        <button class="btn btn-primary mt-3" @onclick="() => Bearbeiten(SelectedItem)" disabled="@(string.IsNullOrEmpty(SelectedItem))">
-            Bearbeiten
-        </button>
-    </div>
+                    <div>
 
-</div>
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <th>Schema</th>
+                                    <th>Table</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tableName in info.TableNames)
+                                {
+                                    <tr>
+                                        <td>@info.SchemaName</td>
+                                        <td>@tableName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+            <div class="row">
+                <select @bind="SelectedItem" class="form-select">
+                    <option value="">-- Wählen Sie eine Tabelle zum Bearbeiten aus --</option>
+                    @foreach (var tableInfo in schemaTableInfosUI)
+                    {
+                        @foreach (var tableName in tableInfo.TableNames)
+                        {
+
+
+                            <option value="@tableName">@tableName</option>
+
+                        }
+
+                    }
+                </select>
+            </div>
+            <div class="row-cols-1">
+                <!-- Button to Trigger Function -->
+                <button class="btn btn-primary mt-3" @onclick="() => Bearbeiten(SelectedItem)" disabled="@(string.IsNullOrEmpty(SelectedItem))">
+                    Bearbeiten
+                </button>
+            </div>
+
+        </div>
     }
 </div>
 <div class="row">
@@ -119,6 +126,36 @@
 
     }
 </div>
+}
+@if (getTableDataSuccess)
+{
+    <div class="form-container">
+        <h4>Table: @tableInfo.TableName</h4>
+        <table>
+            <thead>
+                <tr>
+                    @foreach (var column in tableInfo.ColumnNames)
+                    {
+                        <th>@column</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in tableInfo.Rows)
+                {
+                    <tr>
+                        @foreach (var cell in row)
+                        {
+                            <td>@cell</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <button class="btn btn-primary mt-3" @onclick="() => Zurueck()">Zurück</button>
+    </div>
+}
 
 
 
@@ -130,7 +167,7 @@
     private string ErrorMessage { get; set; } = "";
     private bool IsLoading { get; set; } = false;
     private bool MigrationDeleted { get; set; } = false;
-
+    private bool getTableDataSuccess { get; set; } = false;
     private string SelectedItem { get; set; } = "";
 
     private string Server { get; set; } = "localhost";
@@ -141,7 +178,7 @@
     private string Trusted_Connection { get; set; } = "True";
     private string MultipleActiveResultSets { get; set; } = "True";
 
-
+    TableData tableInfo = new TableData();
 
     private async Task LoadSchema()
     {
@@ -196,9 +233,25 @@
         MigrationDeleted = true;
     }
 
-    private void Bearbeiten(string tableName) 
+    private void Bearbeiten(string tableName)
     {
-           
+        try
+        {
+            tableInfo = rss.GetZeTable(ConnectionString, tableName);
+            getTableDataSuccess = true;
+        }
+        catch (Exception e)
+        {
+            int i = 0;
+
+        }
+
+
+    }
+
+    private void Zurueck()
+    {
+        getTableDataSuccess = false;
     }
 
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace ScaffoldDB.Data
 {
@@ -33,5 +34,66 @@ namespace ScaffoldDB.Data
             }
             
         }
+
+        
+            public TableData ExtractTableData(DbContext context, string tableName)
+            {
+                try
+                {
+                    // Find the entity type for the specified table name
+                    var entityType = context.Model.GetEntityTypes()
+                        .FirstOrDefault(e => e.GetTableName().Equals(tableName, StringComparison.OrdinalIgnoreCase));
+
+                    if (entityType == null)
+                        throw new ArgumentException($"Table '{tableName}' does not exist in the current DbContext.");
+
+                    // Get table name and CLR type
+                    var clrType = entityType.ClrType;
+                    if (clrType == null)
+                        throw new Exception($"No CLR type found for table '{tableName}'.");
+
+
+                // Use reflection to retrieve the DbSet dynamically
+                var dbSetMethod = context.GetType()
+    .GetMethods()
+    .FirstOrDefault(m => m.Name == "Set" && m.IsGenericMethod && m.GetParameters().Length == 0);
+
+                if (dbSetMethod == null)
+                    throw new Exception("Unable to find the generic Set method.");
+
+                var dbSet = dbSetMethod.MakeGenericMethod(clrType).Invoke(context, null);
+
+                if (dbSet == null)
+                    throw new Exception($"Unable to retrieve DbSet for table '{tableName}'.");
+
+                // Use reflection to enumerate data
+                var data = ((IQueryable)dbSet).Cast<object>().ToList();
+
+                // Get property (column) names
+                var properties = clrType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                var columnNames = properties.Select(p => p.Name).ToList();
+
+                // Extract rows of data
+                var rows = data.Select(row =>
+                    {
+                        return properties.Select(p => p.GetValue(row)).ToList();
+                    }).ToList();
+
+                    // Create and return table data
+                    return new TableData
+                    {
+                        TableName = tableName,
+                        ColumnNames = columnNames,
+                        Rows = rows
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred while extracting data for table '{tableName}': {ex.Message}");
+                    return null;
+                }
+            }
+
+        
     }
 }
