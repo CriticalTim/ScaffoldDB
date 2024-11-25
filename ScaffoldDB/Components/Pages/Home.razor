@@ -102,7 +102,6 @@
                     </select>
                 </div>
                 <div class="row-cols-1">
-                    <!-- Button to Trigger Function -->
                     <button class="btn btn-primary mt-3" @onclick="() => Bearbeiten(SelectedItem)" disabled="@(string.IsNullOrEmpty(SelectedItem))">
                         Bearbeiten
                     </button>
@@ -146,7 +145,43 @@
 
         <h4>Table: @tableInfo.TableName</h4>
         <hr />
-        <button class="btn btn-primary">Zeile hinzufügen</button>
+        @if (!Hinzufuegen)
+        {
+            <button class="btn btn-primary" @onclick="() => Add()">Zeile hinzufügen</button>
+        }
+        else if(Hinzufuegen)
+        {
+            <table>
+                
+                    <tbody>
+                        <tr>
+                            @for (int i = 0; i < tableInfo.ColumnNames.Count; i++)
+                            {
+                                var localVariable = i;
+                                if (localVariable == 0)
+                                {
+                                    <td>
+                                        <label for="@tableInfo.ColumnNames[localVariable]">@tableInfo.ColumnNames[localVariable]</label>
+                                        <input disabled />
+                                    </td>
+                                }
+                                else if(localVariable > 0)
+                                {
+                                <td>
+                                    <label for="@tableInfo.ColumnNames[localVariable]">@tableInfo.ColumnNames[localVariable]</label>
+                                    <input @bind="@InputData[localVariable]" id="@tableInfo.ColumnNames[localVariable]" />
+                                </td>
+                                }
+                                
+                                
+                            }
+                        </tr>
+                        
+                    </tbody>
+                </table>
+                <button style="margin-top:5px;" class="btn btn-primary" @onclick="() => CallFunctionWithData()">Process Data</button>
+
+        }
         <hr />
         <table style="height: 400px; overflow-y: auto;">
             <thead>
@@ -193,7 +228,7 @@
     private bool getTableDataSuccess { get; set; } = false;
     private bool MoreRows { get; set; } = false;
     private string SelectedItem { get; set; } = "";
-
+    private bool Hinzufuegen { get; set; } = false;
 
     private string Server { get; set; } = "localhost";
     private string Database { get; set; } = "StackOverflow2013";
@@ -209,6 +244,10 @@
     private int Limit = 100; // Number of rows per page
     private bool isInvalid = false;
     private bool isLoadingData = false;
+
+    //private List<string> InputData;
+    private string[] InputData;
+    private Dictionary<string, object> InputDataDict = new Dictionary<string, object>();
 
 
     TableData tableInfo = new TableData();
@@ -272,7 +311,7 @@
         try
         {
             tableInfo = await rss.GetZeTable(ConnectionString, tableName);
-            //tableInfoDisplay = tableInfo;
+
             getTableDataSuccess = true;
             if (tableInfo.Rows.Count() >= 50)
             {
@@ -284,7 +323,7 @@
             int i = 0;
 
         }
-
+        Hinzufuegen = false;
 
     }
 
@@ -297,9 +336,9 @@
         try
         {
 
-            // Fetch rows using the service
+
             tableInfo = await rss.GetZeTable(ConnectionString, SelectedItem, Offset, Limit);
-            //var newRows = await DataService.GetRowsAsync("YourTable", offset, limit);
+
             if (tableInfo != null && tableInfo.Rows.Any())
             {
                 tableInfo.Rows.AddRange(tableInfo.Rows);
@@ -312,6 +351,7 @@
         }
 
         isLoadingData = false;
+        Hinzufuegen = false;
     }
 
     private void Zurueck()
@@ -329,8 +369,38 @@
 
         int id = int.Parse(stringId);
         await service.DeleteAsync(tableInfo.TableName, id);
+        await LoadMore();
     }
 
+    private async Task Add()
+    {
+        //InputData = new List<string>(new string[tableInfo.ColumnNames.Count]);
+        InputData = new string[tableInfo.ColumnNames.Count];
+        Hinzufuegen = true;
+    }
+
+    private async Task CallFunctionWithData()
+    {
+        InputDataDict = tableInfo.ColumnNames.Skip(1)
+       .Zip(InputData.Skip(1), (columnName, value) => new { columnName, value })
+       .ToDictionary(x => x.columnName, x => (object)x.value);
+
+        await ProcessData(InputDataDict);
+    }
+
+    private async Task ProcessData(Dictionary<string, object> data)
+    {
+        var service = TableServiceFactory.Create(ConnectionString);
+
+        await service.InsertAsync(tableInfo.TableName, data);
+        await LoadMore();
+
+    }
+    //private bool IsIdentityColumn(string columnName)
+    //{
+    //    // Logic to determine if the column is an identity column
+    //    return tableInfo.IdentityColumns.Contains(columnName);
+    //}
 }
 <style>
     /* Form Container Styling */
