@@ -1,6 +1,7 @@
 ﻿@page "/"
 @*@inject DatabaseSchemaService SchemaService*@
 @inject RuntimeScaffoldService rss
+@inject DynamicTableServiceFactory TableServiceFactory
 
 <h3 style="position:center;">Database Manipulator</h3>
 
@@ -10,135 +11,154 @@
 
 
 
-<div class="row">
-    <div class="form-container col-6">
-        <h4>Connection Settings</h4>
-
-        <div class="form-group">
-            <label for="Server">Server:</label>
-            <input id="Server" @bind="Server" type="text" placeholder="Enter server name" />
-        </div>
-        <div class="form-group">
-            <label for="Database">Database:</label>
-            <input id="Database" @bind="Database" type="text" placeholder="Enter database name" />
-        </div>
-        <div class="form-group">
-            <label for="SQLLogin">SQL-Login</label>
-            <input id="SQLLogin" @bind="SQLLogin" type="checkbox" />
-        </div>
-        @if (SQLLogin)
-        {
-            <div class="form-group">
-                <label for="login">Login:</label>
-                <input id="login" @bind="login" type="text" placeholder="Enter Login name" />
-            </div>
-            <div class="form-group">
-                <label for="Password">Password:</label>
-                <input id="Password" @bind="password" type="text" placeholder="Enter Password" />
-            </div>
-        }
-        <div class="form-group">
-            <label for="Trusted_Connection">Trusted Connection:</label>
-            <input id="Trusted_Connection" @bind="Trusted_Connection" type="checkbox" />
-        </div>
-        <div class="form-group">
-            <label for="MultipleActiveResultSets">Multiple Active Result Sets:</label>
-            <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" type="checkbox" />
-        </div>
-        <div class="form-actions">
-            <button class="btn btn-primary" @onclick="LoadSchema">Load Database Information</button>
-        </div>
-
-    </div>
-
-    @if (IsLoading)
-    {
-        <p>Loading...</p>
-    }
-    else if (!IsLoading && schemaTableInfosUI.Any())
-    {
+    <div class="row">
         <div class="form-container col-6">
-            <div class="row">
-                <h4>Tabellenübersicht</h4>
-                @foreach (var info in schemaTableInfosUI)
-                {
-                    <div>
+            <h4>Connection Settings</h4>
 
-                        <table border="1">
-                            <thead>
-                                <tr>
-                                    <th>Schema</th>
-                                    <th>Table</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var tableName in info.TableNames)
-                                {
-                                    <tr>
-                                        <td>@info.SchemaName</td>
-                                        <td>@tableName</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
+            <div class="form-group">
+                <label for="Server">Server:</label>
+                <input id="Server" @bind="Server" type="text" placeholder="Enter server name" />
             </div>
-            <div class="row">
-                <select @bind="SelectedItem" class="form-select">
-                    <option value="">-- Wählen Sie eine Tabelle zum Bearbeiten aus --</option>
-                    @foreach (var tableInfo in schemaTableInfosUI)
+            <div class="form-group">
+                <label for="Database">Database:</label>
+                <input id="Database" @bind="Database" type="text" placeholder="Enter database name" />
+            </div>
+            <div class="form-group">
+                <label for="SQLLogin">SQL-Login</label>
+                <input id="SQLLogin" @bind="SQLLogin" type="checkbox" />
+            </div>
+            @if (SQLLogin)
+            {
+                <div class="form-group">
+                    <label for="login">Login:</label>
+                    <input id="login" @bind="login" type="text" placeholder="Enter Login name" />
+                </div>
+                <div class="form-group">
+                    <label for="Password">Password:</label>
+                    <input id="Password" @bind="password" type="text" placeholder="Enter Password" />
+                </div>
+            }
+            <div class="form-group">
+                <label for="Trusted_Connection">Trusted Connection:</label>
+                <input id="Trusted_Connection" @bind="Trusted_Connection" type="checkbox" />
+            </div>
+            <div class="form-group">
+                <label for="MultipleActiveResultSets">Multiple Active Result Sets:</label>
+                <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" type="checkbox" />
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" @onclick="LoadSchema">Load Database Information</button>
+            </div>
+
+        </div>
+
+        @if (IsLoading)
+        {
+            <p>Loading...</p>
+        }
+        else if (!IsLoading && schemaTableInfosUI.Any())
+        {
+            <div class="form-container col-6">
+                <div class="row">
+                    <h4>Tabellenübersicht</h4>
+                    @foreach (var info in schemaTableInfosUI)
                     {
-                        @foreach (var tableName in tableInfo.TableNames)
+                        <div>
+
+                            <table border="1">
+                                <thead>
+                                    <tr>
+                                        <th>Schema</th>
+                                        <th>Table</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var tableName in info.TableNames)
+                                    {
+                                        <tr>
+                                            <td>@info.SchemaName</td>
+                                            <td>@tableName</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <div class="row">
+                    <select @bind="SelectedItem" class="form-select">
+                        <option value="">-- Wählen Sie eine Tabelle zum Bearbeiten aus --</option>
+                        @foreach (var tableInfo in schemaTableInfosUI)
                         {
+                            @foreach (var tableName in tableInfo.TableNames)
+                            {
 
 
-                            <option value="@tableName">@tableName</option>
+                                <option value="@tableName">@tableName</option>
+
+                            }
 
                         }
+                    </select>
+                </div>
+                <div class="row-cols-1">
+                    <!-- Button to Trigger Function -->
+                    <button class="btn btn-primary mt-3" @onclick="() => Bearbeiten(SelectedItem)" disabled="@(string.IsNullOrEmpty(SelectedItem))">
+                        Bearbeiten
+                    </button>
+                </div>
 
-                    }
-                </select>
             </div>
-            <div class="row-cols-1">
-                <!-- Button to Trigger Function -->
-                <button class="btn btn-primary mt-3" @onclick="() => Bearbeiten(SelectedItem)" disabled="@(string.IsNullOrEmpty(SelectedItem))">
-                    Bearbeiten
-                </button>
+        }
+    </div>
+    <div class="row">
+        @if (!string.IsNullOrEmpty(ErrorMessage) && !ErrorMessage.Contains("Success"))
+        {
+            <div class="form-container">
+                <p style="color: red;">@ErrorMessage</p>
             </div>
 
-        </div>
-    }
-</div>
-<div class="row">
-    @if (!string.IsNullOrEmpty(ErrorMessage) && !ErrorMessage.Contains("Success"))
-    {
-        <div class="form-container">
-            <p style="color: red;">@ErrorMessage</p>
-        </div>
+        }
+        else if (!string.IsNullOrEmpty(ErrorMessage) && ErrorMessage.Contains("Success"))
+        {
+            <div class="form-container">
+                <p style="color: green;">@ErrorMessage</p>
+            </div>
 
-    }
-    else if (!string.IsNullOrEmpty(ErrorMessage) && ErrorMessage.Contains("Success"))
-    {
-        <div class="form-container">
-            <p style="color: green;">@ErrorMessage</p>
-        </div>
-
-    }
-</div>
+        }
+    </div>
 }
 @if (getTableDataSuccess)
 {
-    <div class="form-container">
+
+
+    <div class="form-container" style="width:100%;max-width:100%;">
+        @if (MoreRows)
+        {
+            <div>
+                <label for="offsetRange">Seite:</label>
+                <input type="range" id="offsetRange" min="0" max="150" step="1" @bind="Page" />
+                <span>Page: @Page (Offset: @Offset, Limit: @Limit)</span>
+            </div>
+
+            <button class="btn btn-primary" @onclick="LoadMore" disabled="@isLoadingData">Seite laden</button>
+        }
+
         <h4>Table: @tableInfo.TableName</h4>
-        <table>
+        <hr />
+        <button class="btn btn-primary">Zeile hinzufügen</button>
+        <hr />
+        <table style="height: 400px; overflow-y: auto;">
             <thead>
                 <tr>
                     @foreach (var column in tableInfo.ColumnNames)
                     {
                         <th>@column</th>
                     }
+                    <th> Zeile löschen</th>
+                    <th> Zeile bearbeiten</th>
                 </tr>
+
             </thead>
             <tbody>
                 @foreach (var row in tableInfo.Rows)
@@ -148,12 +168,15 @@
                         {
                             <td>@cell</td>
                         }
+                        <td><button class="btn btn-danger" @onclick="() => DeleteRow(row.First().ToString())">Löschen</button></td>
+                        <td><button class="btn btn-warning">Bearbeiten</button></td>
                     </tr>
                 }
             </tbody>
         </table>
 
         <button class="btn btn-primary mt-3" @onclick="() => Zurueck()">Zurück</button>
+
     </div>
 }
 
@@ -168,7 +191,9 @@
     private bool IsLoading { get; set; } = false;
     private bool MigrationDeleted { get; set; } = false;
     private bool getTableDataSuccess { get; set; } = false;
+    private bool MoreRows { get; set; } = false;
     private string SelectedItem { get; set; } = "";
+
 
     private string Server { get; set; } = "localhost";
     private string Database { get; set; } = "StackOverflow2013";
@@ -178,7 +203,16 @@
     private string Trusted_Connection { get; set; } = "True";
     private string MultipleActiveResultSets { get; set; } = "True";
 
+
+    private int Page = 0; // Current page number
+    private int Offset => Page * Limit; // Calculate offset based on the page
+    private int Limit = 100; // Number of rows per page
+    private bool isInvalid = false;
+    private bool isLoadingData = false;
+
+
     TableData tableInfo = new TableData();
+    TableData tableInfoDisplay = new TableData();
 
     private async Task LoadSchema()
     {
@@ -233,12 +267,17 @@
         MigrationDeleted = true;
     }
 
-    private void Bearbeiten(string tableName)
+    private async Task Bearbeiten(string tableName)
     {
         try
         {
-            tableInfo = rss.GetZeTable(ConnectionString, tableName);
+            tableInfo = await rss.GetZeTable(ConnectionString, tableName);
+            //tableInfoDisplay = tableInfo;
             getTableDataSuccess = true;
+            if (tableInfo.Rows.Count() >= 50)
+            {
+                MoreRows = true;
+            }
         }
         catch (Exception e)
         {
@@ -249,9 +288,47 @@
 
     }
 
+    private async Task LoadMore()
+    {
+        if (isLoadingData) return;
+
+        isLoadingData = true;
+
+        try
+        {
+
+            // Fetch rows using the service
+            tableInfo = await rss.GetZeTable(ConnectionString, SelectedItem, Offset, Limit);
+            //var newRows = await DataService.GetRowsAsync("YourTable", offset, limit);
+            if (tableInfo != null && tableInfo.Rows.Any())
+            {
+                tableInfo.Rows.AddRange(tableInfo.Rows);
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+
+        isLoadingData = false;
+    }
+
     private void Zurueck()
     {
         getTableDataSuccess = false;
+    }
+
+    private async Task DeleteRow(string stringId)
+    {
+
+        var service = TableServiceFactory.Create(ConnectionString);
+
+
+        if (stringId == null) return;
+
+        int id = int.Parse(stringId);
+        await service.DeleteAsync(tableInfo.TableName, id);
     }
 
 }

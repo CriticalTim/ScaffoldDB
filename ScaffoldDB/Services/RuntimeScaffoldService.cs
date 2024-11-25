@@ -169,7 +169,7 @@ namespace ScaffoldDB.Services
 
         }
 
-        public TableData GetZeTable(string connectionString, string tableName)
+        public async Task<TableData> GetZeTable(string connectionString, string tableName, int offset = 0, int limit = 50)
         {
             try
             {
@@ -225,7 +225,15 @@ namespace ScaffoldDB.Services
                 TableData tableData = new TableData();
                 DynamicContextInspector dynamicContextInspector = new DynamicContextInspector();
 
-                tableData = dynamicContextInspector.ExtractTableData(dynamicContext, tableName);
+                if(offset != 0 && limit != 50)
+                {
+                    tableData = await dynamicContextInspector.ExtractTableData(dynamicContext, tableName, offset, limit);
+                }
+                else
+                {
+                    tableData = await dynamicContextInspector.ExtractTableData(dynamicContext, tableName);
+
+                }
 
 
 

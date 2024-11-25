@@ -15,6 +15,8 @@ namespace ScaffoldDB
 
             //builder.Services.AddSingleton<DatabaseSchemaService>();
             builder.Services.AddSingleton<RuntimeScaffoldService>();
+            //builder.Services.AddScoped<DynamicTableService>();
+            builder.Services.AddScoped<DynamicTableServiceFactory>();
 
             var app = builder.Build();
 

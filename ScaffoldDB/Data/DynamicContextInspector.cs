@@ -36,7 +36,7 @@ namespace ScaffoldDB.Data
         }
 
         
-            public TableData ExtractTableData(DbContext context, string tableName)
+            public async Task<TableData> ExtractTableData(DbContext context, string tableName, int offset = 0, int limit = 50)
             {
                 try
                 {
@@ -55,8 +55,8 @@ namespace ScaffoldDB.Data
 
                 // Use reflection to retrieve the DbSet dynamically
                 var dbSetMethod = context.GetType()
-    .GetMethods()
-    .FirstOrDefault(m => m.Name == "Set" && m.IsGenericMethod && m.GetParameters().Length == 0);
+                                .GetMethods()
+                                .FirstOrDefault(m => m.Name == "Set" && m.IsGenericMethod && m.GetParameters().Length == 0);
 
                 if (dbSetMethod == null)
                     throw new Exception("Unable to find the generic Set method.");
@@ -67,7 +67,10 @@ namespace ScaffoldDB.Data
                     throw new Exception($"Unable to retrieve DbSet for table '{tableName}'.");
 
                 // Use reflection to enumerate data
-                var data = ((IQueryable)dbSet).Cast<object>().ToList();
+                var data = await ((IQueryable)dbSet).Cast<object>()
+                    .Skip(offset)
+                    .Take(limit)
+                    .ToListAsync();
 
                 // Get property (column) names
                 var properties = clrType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
