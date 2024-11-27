@@ -174,7 +174,7 @@
                                 {
                                     <td>
                                         <label for="@tableInfo.ColumnNames[localVariable]">@tableInfo.ColumnNames[localVariable]</label>
-                                        <input @bind="@InputData[localVariable]" id="@tableInfo.ColumnNames[localVariable]" />
+                                        <input @bind="@InputData[localVariable]" id="@tableInfo.ColumnNames[localVariable]" type="@GetInputType(tableInfo.ColumnDataTypes[localVariable])" />
                                     </td>
                                 }
 
@@ -321,6 +321,7 @@
     private bool MoreRows { get; set; } = false;
     private string SelectedItem { get; set; } = "";
     private bool Hinzufuegen { get; set; } = false;
+    List<string> ColumnDataTypeList = new List<string>();
 
     private string Server { get; set; } = "localhost";
     private string Database { get; set; } = "StackOverflow2013";
@@ -423,6 +424,8 @@
             maxPageCount = tableInfo.RowCount / 100;
             //Numbers = Enumerable.Range(1, maxPageCount).ToList();
 
+            ColumnDataTypeList = tableInfo.ColumnDataTypes;
+
             getTableDataSuccess = true;
             if (tableInfo.Rows.Count() >= 50)
             {
@@ -481,7 +484,7 @@
 
             tableInfo = await rss.GetZeTable(ConnectionString, SelectedItem, Offset, Limit);
 
-            
+
         }
         catch (Exception ex)
         {
@@ -558,6 +561,19 @@
         Page = maxPageCount;
         await LoadMore();
 
+    }
+
+    private string GetInputType(string columnType)
+    {
+        return columnType switch
+        {
+            "int" or "long" or "Int32" or "Int64" => "number",
+            "float" or "double" => "number",
+            "decimal" => "number",
+            "DateTime" => "date",
+            "bool" => "checkbox",
+            _ => "text" // Default to text for other types
+        };
     }
     //private bool IsIdentityColumn(string columnName)
     //{

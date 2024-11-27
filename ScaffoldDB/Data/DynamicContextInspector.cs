@@ -152,6 +152,8 @@ namespace ScaffoldDB.Data
 
                 var columnNames = properties.Select(p => p.Name).ToList();
 
+                var columnDataTypes = properties.Select(p => p.PropertyType.Name).ToList();
+
                 // Extract rows of data
                 var rows = data.Select(row =>
                 {
@@ -164,7 +166,8 @@ namespace ScaffoldDB.Data
                     TableName = tableName,
                     ColumnNames = columnNames,
                     Rows = rows,
-                    RowCount = totalCount
+                    RowCount = totalCount,
+                    ColumnDataTypes = columnDataTypes
                 };
             }
             catch (Exception ex)
