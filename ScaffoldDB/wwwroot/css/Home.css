@@ -7,9 +7,11 @@
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Softer shadow */
     margin-bottom: 2vh;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: auto;
     color: #333; /* Dark gray text */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    border: 1px solid #2a7b9b;
+    border: 2px solid #2a7b9b;
 }
 
     .form-container h4 {
@@ -89,7 +91,7 @@ table {
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Softer shadow */
-    border: 5px solid black;
+    border: 2px solid #2a7b9b;
 }
 
 th, td {

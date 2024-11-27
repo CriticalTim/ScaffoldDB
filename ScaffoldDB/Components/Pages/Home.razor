@@ -12,14 +12,14 @@
     @if (page1 == true && !IsLoading)
     {
         <div class="form-container col-6">
-            <h4>Connection Settings</h4>
+            <h4>Datenbank Verbindung</h4>
 
             <div class="form-group">
                 <label for="Server">Server:</label>
                 <input id="Server" @bind="Server" type="text" placeholder="Enter server name" />
             </div>
             <div class="form-group">
-                <label for="Database">Database:</label>
+                <label for="Database">Datenbank:</label>
                 <input id="Database" @bind="Database" type="text" placeholder="Enter database name" />
             </div>
             <div class="form-group">
@@ -33,7 +33,7 @@
                     <input id="login" @bind="login" type="text" placeholder="Enter Login name" />
                 </div>
                 <div class="form-group">
-                    <label for="Password">Password:</label>
+                    <label for="Password">Passwort:</label>
                     <input id="Password" @bind="password" type="text" placeholder="Enter Password" />
                 </div>
             }
@@ -46,7 +46,7 @@
                 <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" type="checkbox" />
             </div>
             <div class="form-actions">
-                <button class="btn btn-primary" @onclick="LoadSchema">Load Database Information</button>
+                <button class="btn btn-primary" @onclick="LoadSchema">Lade Databank Information</button>
             </div>
 
         </div>
@@ -67,7 +67,7 @@
                     {
                         <div>
 
-                            <table border="1">
+                            <table>
                                 <thead>
                                     <tr>
                                         <th>Schema</th>
@@ -136,7 +136,7 @@
     <div class="form-container" style="width:100%;max-width:100%;">
 
 
-        <h4>Table: @tableInfo.TableName</h4>
+        <h4>Tabelle: @tableInfo.TableName</h4>
         <hr />
         @if (!Hinzufuegen)
         {
@@ -156,9 +156,9 @@
         else if (Hinzufuegen)
         {
             <div class="row">
-                <table>
+                <table style="border-radius: 5px;">
 
-                    <tbody>
+                    <tbody style="border-radius: 5px;">
                         <tr>
                             @for (int i = 0; i < tableInfo.ColumnNames.Count; i++)
                             {
@@ -189,7 +189,7 @@
 
             <div class="row" style="margin-top:10px;">
                 <div class="col-2">
-                    <button class="btn btn-primary" @onclick="() => CallFunctionWithData()">Process Data</button>
+                    <button class="btn btn-primary" @onclick="() => CallFunctionWithData()">Daten hinzufügen</button>
 
                 </div>
                 <div class="col-7">
