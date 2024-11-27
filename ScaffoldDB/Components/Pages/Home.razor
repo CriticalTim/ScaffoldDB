@@ -1,5 +1,5 @@
 ﻿@page "/"
-@*@inject DatabaseSchemaService SchemaService*@
+
 @inject RuntimeScaffoldService rss
 @inject DynamicTableServiceFactory TableServiceFactory
 
@@ -46,7 +46,7 @@
                 <input id="MultipleActiveResultSets" @bind="MultipleActiveResultSets" type="checkbox" />
             </div>
             <div class="form-actions">
-                <button class="btn btn-primary" @onclick="LoadSchema">Lade Databank Information</button>
+                <button class="btn btn-primary" @onclick="LoadSchema">Lade Datenbank Information</button>
             </div>
 
         </div>
@@ -423,7 +423,7 @@
             Numbers = Enumerable.Range(1, maxPageCount).ToList();
 
             getTableDataSuccess = true;
-            if (tableInfo.Rows.Count() >= 50)
+            if (tableInfo.Rows.Count() >= 100)
             {
                 MoreRows = true;
             }
@@ -445,15 +445,17 @@
 
         try
         {
-
+            tableInfo.TableName = String.Empty;
+            tableInfo.Rows.Clear();
+            tableInfo.ColumnNames.Clear();
 
             tableInfo = await rss.GetZeTable(ConnectionString, SelectedItem, Offset, Limit);
 
-            if (tableInfo != null && tableInfo.Rows.Any())
-            {
-                tableInfo.Rows.AddRange(tableInfo.Rows);
+            //if (tableInfo != null && tableInfo.Rows.Any())
+            //{
+            //    tableInfo.Rows.AddRange(tableInfo.Rows);
 
-            }
+            //}
         }
         catch (Exception ex)
         {
