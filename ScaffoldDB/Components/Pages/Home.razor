@@ -3,15 +3,14 @@
 @inject RuntimeScaffoldService rss
 @inject DynamicTableServiceFactory TableServiceFactory
 
-<h3 style="position:center;">Database Manipulator</h3>
-
+    <link href="css/Home.css" rel="stylesheet">
 
 @if (getTableDataSuccess == false)
 {
 
 
-
-    <div class="row">
+    @if (page1 == true && !IsLoading)
+    {
         <div class="form-container col-6">
             <h4>Connection Settings</h4>
 
@@ -51,12 +50,15 @@
             </div>
 
         </div>
+    }
+    
+
 
         @if (IsLoading)
         {
             <p>Loading...</p>
         }
-        else if (!IsLoading && schemaTableInfosUI.Any())
+        else if (!IsLoading && schemaTableInfosUI.Any() && page2 == true)
         {
             <div class="form-container col-6">
                 <div class="row">
@@ -85,9 +87,9 @@
                         </div>
                     }
                 </div>
-                <div class="row">
+                <div class="row-cols-4" style="margin-top:20px;">
                     <select @bind="SelectedItem" class="form-select">
-                        <option value="">-- Wählen Sie eine Tabelle zum Bearbeiten aus --</option>
+                        <option value="">-- Tabelle auswählen --</option>
                         @foreach (var tableInfo in schemaTableInfosUI)
                         {
                             @foreach (var tableName in tableInfo.TableNames)
@@ -109,7 +111,7 @@
 
             </div>
         }
-    </div>
+    
     <div class="row">
         @if (!string.IsNullOrEmpty(ErrorMessage) && !ErrorMessage.Contains("Success"))
         {
@@ -132,27 +134,30 @@
 
 
     <div class="form-container" style="width:100%;max-width:100%;">
-        @if (MoreRows)
-        {
-            <div>
-                <label for="offsetRange">Seite:</label>
-                <input type="range" id="offsetRange" min="0" max="150" step="1" @bind="Page" />
-                <span>Page: @Page (Offset: @Offset, Limit: @Limit)</span>
-            </div>
 
-            <button class="btn btn-primary" @onclick="LoadMore" disabled="@isLoadingData">Seite laden</button>
-        }
 
         <h4>Table: @tableInfo.TableName</h4>
         <hr />
         @if (!Hinzufuegen)
         {
-            <button class="btn btn-primary" @onclick="() => Add()">Zeile hinzufügen</button>
+            <div class="row">
+                <div class="col-auto">
+                    <button class="btn btn-primary" @onclick="() => Add()">Zeile hinzufügen</button>
+                </div>
+                @*<div class="col-8">
+
+                </div>*@
+                <div class="col-auto">
+                    <button class="btn btn-primary" @onclick="() => Zurueck()">Zurück zur Tabellenauswahl</button>
+                </div>
+            </div>
+
         }
-        else if(Hinzufuegen)
+        else if (Hinzufuegen)
         {
-            <table>
-                
+            <div class="row">
+                <table>
+
                     <tbody>
                         <tr>
                             @for (int i = 0; i < tableInfo.ColumnNames.Count; i++)
@@ -165,24 +170,75 @@
                                         <input disabled />
                                     </td>
                                 }
-                                else if(localVariable > 0)
+                                else if (localVariable > 0)
                                 {
-                                <td>
-                                    <label for="@tableInfo.ColumnNames[localVariable]">@tableInfo.ColumnNames[localVariable]</label>
-                                    <input @bind="@InputData[localVariable]" id="@tableInfo.ColumnNames[localVariable]" />
-                                </td>
+                                    <td>
+                                        <label for="@tableInfo.ColumnNames[localVariable]">@tableInfo.ColumnNames[localVariable]</label>
+                                        <input @bind="@InputData[localVariable]" id="@tableInfo.ColumnNames[localVariable]" />
+                                    </td>
                                 }
-                                
-                                
+
+
                             }
                         </tr>
-                        
+
                     </tbody>
                 </table>
-                <button style="margin-top:5px;" class="btn btn-primary" @onclick="() => CallFunctionWithData()">Process Data</button>
+
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+                <div class="col-2">
+                    <button class="btn btn-primary" @onclick="() => CallFunctionWithData()">Process Data</button>
+
+                </div>
+                <div class="col-7">
+                </div>
+
+                <div class="col-3">
+                    <button class="btn btn-primary" @onclick="() => Zurueck()">Zurück zur Tabellenauswahl</button>
+
+                </div>
+            </div>
 
         }
         <hr />
+        @if (MoreRows)
+        {
+            <div>
+
+            </div>
+            <div class="row align-items-center" style="gap: 5px;">
+                <div class="col-auto">
+                    @if (Page != 0 && Page > 0)
+                    {
+                        <button class="btn btn-primary btn-sm" @onclick="LoadZurueck" disabled="@isLoadingData"><code>&lt;</code></button>
+
+                    }
+                </div>
+                <div class="col-auto">
+                    <label class="form-label mb-0" for="offsetRange">Seite:</label>
+                </div>
+
+
+                <div class="col-auto">
+                    <input class="form-control form-control-sm" type="number" id="offsetRange" min="0" step="1" @bind="Page" />
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary btn-sm" @onclick="LoadMore" disabled="@isLoadingData">Seite laden</button>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary btn-sm" @onclick="LoadVor" disabled="@isLoadingData"><code>&gt;</code></button>
+                </div>
+                @*<div class="col-6">
+                </div>*@
+            </div>
+
+            <hr />
+
+
+
+        }
         <table style="height: 400px; overflow-y: auto;">
             <thead>
                 <tr>
@@ -209,8 +265,44 @@
                 }
             </tbody>
         </table>
+        @if (MoreRows)
+        {
+            <hr />
+            <div>
 
-        <button class="btn btn-primary mt-3" @onclick="() => Zurueck()">Zurück</button>
+            </div>
+            <div class="row align-items-center" style="gap: 5px;">
+                <div class="col-auto">
+                    @if (Page != 0 && Page > 0)
+                    {
+                        <button class="btn btn-primary btn-sm" @onclick="LoadZurueck" disabled="@isLoadingData"><code>&lt;</code></button>
+
+                    }
+                </div>
+                <div class="col-auto">
+                    <label class="form-label mb-0" for="offsetRange">Seite:</label>
+                </div>
+
+
+                <div class="col-auto">
+                    <input class="form-control form-control-sm" style="width: 50px;" type="number" id="offsetRange" min="0" step="1" @bind="Page" />
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary btn-sm" @onclick="LoadMore" disabled="@isLoadingData">Seite laden</button>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary btn-sm" @onclick="LoadVor" disabled="@isLoadingData"><code>&gt;</code></button>
+                </div>
+                @*<div class="col-6">
+                </div>*@
+            </div>
+
+            <hr />
+
+
+
+        }
+
 
     </div>
 }
@@ -238,6 +330,11 @@
     private string Trusted_Connection { get; set; } = "True";
     private string MultipleActiveResultSets { get; set; } = "True";
 
+    private bool page1 { get; set; } = true;
+    private bool page2 { get; set; } = false;
+    private bool page3 { get; set; } = false;
+    private bool page4 { get; set; } = false;
+
 
     private int Page = 0; // Current page number
     private int Offset => Page * Limit; // Calculate offset based on the page
@@ -249,9 +346,15 @@
     private string[] InputData;
     private Dictionary<string, object> InputDataDict = new Dictionary<string, object>();
 
+    private List<int> Numbers { get; set; }
+    private int SelectedNumber { get; set; }
 
     TableData tableInfo = new TableData();
     TableData tableInfoDisplay = new TableData();
+
+
+
+
 
     private async Task LoadSchema()
     {
@@ -282,6 +385,8 @@
 
         MigrationDeleted = false;
         IsLoading = false;
+        page1 = false;
+        page2 = true;
     }
 
 
@@ -308,9 +413,14 @@
 
     private async Task Bearbeiten(string tableName)
     {
+
+
         try
         {
             tableInfo = await rss.GetZeTable(ConnectionString, tableName);
+
+            int maxPageCount = tableInfo.Rows.Count / 100;
+            Numbers = Enumerable.Range(1, maxPageCount).ToList();
 
             getTableDataSuccess = true;
             if (tableInfo.Rows.Count() >= 50)
@@ -333,6 +443,63 @@
 
         isLoadingData = true;
 
+        try
+        {
+
+
+            tableInfo = await rss.GetZeTable(ConnectionString, SelectedItem, Offset, Limit);
+
+            if (tableInfo != null && tableInfo.Rows.Any())
+            {
+                tableInfo.Rows.AddRange(tableInfo.Rows);
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+
+        isLoadingData = false;
+        Hinzufuegen = false;
+    }
+
+    private async Task LoadVor()
+    {
+        if (isLoadingData) return;
+
+        isLoadingData = true;
+
+        Page = Page + 1;
+
+        try
+        {
+
+
+            tableInfo = await rss.GetZeTable(ConnectionString, SelectedItem, Offset, Limit);
+
+            if (tableInfo != null && tableInfo.Rows.Any())
+            {
+                tableInfo.Rows.AddRange(tableInfo.Rows);
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+
+        isLoadingData = false;
+        Hinzufuegen = false;
+    }
+
+    private async Task LoadZurueck()
+    {
+        if (isLoadingData) return;
+
+        isLoadingData = true;
+
+        Page = Page - 1;
         try
         {
 
@@ -402,110 +569,3 @@
     //    return tableInfo.IdentityColumns.Contains(columnName);
     //}
 }
-<style>
-    /* Form Container Styling */
-    .form-container {
-        padding: 20px;
-        max-width: 500px;
-        margin: 0 auto;
-        background: #1e2a39;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        margin-bottom: 2vh;
-        color: #fff;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-        .form-container h4 {
-            color: #00d8ff;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-    /* Form Group Styling */
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-group input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #00d8ff;
-            border-radius: 5px;
-            background: #1e2a39;
-            color: #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-            .form-group input[type="text"]:focus {
-                outline: none;
-                border-color: #66ffcc;
-                box-shadow: 0 0 10px #66ffcc;
-            }
-
-        .form-group input[type="checkbox"] {
-            transform: scale(1.2);
-            margin-right: 10px;
-        }
-
-    /* Form Actions Styling */
-    .form-actions {
-        text-align: center;
-        margin-top: 20px;
-    }
-
-    .btn.btn-primary {
-        background: linear-gradient(135deg, #00d8ff, #0066ff);
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        padding: 10px 20px;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 15px rgba(0, 255, 255, 0.4);
-    }
-
-        .btn.btn-primary:hover {
-            background: linear-gradient(135deg, #66ffcc, #33ccff);
-            box-shadow: 0 4px 20px rgba(51, 204, 255, 0.6);
-            transform: scale(1.05);
-        }
-
-        .btn.btn-primary:active {
-            transform: scale(0.8);
-        }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        background: #1e2a39;
-        color: #fff;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    th, td {
-        padding: 12px 15px;
-        border: 1px solid #2e3c4e;
-        text-align: left;
-    }
-
-    th {
-        background: #00d8ff;
-        color: #000;
-    }
-
-    tbody tr:hover {
-        background: rgba(0, 216, 255, 0.1);
-    }
-</style>

@@ -71,7 +71,7 @@ namespace ScaffoldDB.Data
                     .Skip(offset)
                     .Take(limit)
                     .ToListAsync();
-
+                
                 // Get property (column) names
                 var properties = clrType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 var columnNames = properties.Select(p => p.Name).ToList();
