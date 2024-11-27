@@ -217,12 +217,12 @@
                     }
                 </div>
                 <div class="col-auto">
-                    <label class="form-label mb-0" for="offsetRange">Seite:</label>
+                    <label class="form-label mb-0" for="offsetRange">Seite: @Page von @maxPageCount</label>
                 </div>
 
 
                 <div class="col-auto">
-                    <input class="form-control form-control-sm" type="number" id="offsetRange" min="0" step="1" @bind="Page" />
+                    <input class="form-control form-control-sm" type="number" id="offsetRange" min="0" max="@maxPageCount" step="1" @bind="Page" />
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-primary btn-sm" @onclick="LoadMore" disabled="@isLoadingData">Seite laden</button>
@@ -280,12 +280,12 @@
                     }
                 </div>
                 <div class="col-auto">
-                    <label class="form-label mb-0" for="offsetRange">Seite:</label>
+                    <label class="form-label mb-0" for="offsetRange">Seite: @Page von @maxPageCount</label>
                 </div>
 
 
                 <div class="col-auto">
-                    <input class="form-control form-control-sm" style="width: 50px;" type="number" id="offsetRange" min="0" step="1" @bind="Page" />
+                    <input class="form-control form-control-sm" style="width: 50px;" type="number" id="offsetRange" min="0" max="@maxPageCount" step="1" @bind="Page" />
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-primary btn-sm" @onclick="LoadMore" disabled="@isLoadingData">Seite laden</button>
@@ -335,6 +335,7 @@
     private bool page3 { get; set; } = false;
     private bool page4 { get; set; } = false;
 
+    private int maxPageCount = 0;
 
     private int Page = 0; // Current page number
     private int Offset => Page * Limit; // Calculate offset based on the page
@@ -419,11 +420,11 @@
         {
             tableInfo = await rss.GetZeTable(ConnectionString, tableName);
 
-            int maxPageCount = tableInfo.Rows.Count / 100;
-            Numbers = Enumerable.Range(1, maxPageCount).ToList();
+            maxPageCount = tableInfo.RowCount / 100;
+            //Numbers = Enumerable.Range(1, maxPageCount).ToList();
 
             getTableDataSuccess = true;
-            if (tableInfo.Rows.Count() >= 100)
+            if (tableInfo.Rows.Count() >= 50)
             {
                 MoreRows = true;
             }
@@ -480,11 +481,7 @@
 
             tableInfo = await rss.GetZeTable(ConnectionString, SelectedItem, Offset, Limit);
 
-            if (tableInfo != null && tableInfo.Rows.Any())
-            {
-                tableInfo.Rows.AddRange(tableInfo.Rows);
-
-            }
+            
         }
         catch (Exception ex)
         {
@@ -508,11 +505,7 @@
 
             tableInfo = await rss.GetZeTable(ConnectionString, SelectedItem, Offset, Limit);
 
-            if (tableInfo != null && tableInfo.Rows.Any())
-            {
-                tableInfo.Rows.AddRange(tableInfo.Rows);
 
-            }
         }
         catch (Exception ex)
         {
@@ -562,6 +555,7 @@
         var service = TableServiceFactory.Create(ConnectionString);
 
         await service.InsertAsync(tableInfo.TableName, data);
+        Page = maxPageCount;
         await LoadMore();
 
     }
